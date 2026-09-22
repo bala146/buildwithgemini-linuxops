@@ -24,6 +24,10 @@ from google.adk.models import Gemini
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 from google.genai import types
 
+from app.app_utils.a2ui_utils import (
+    a2ui_after_model_callback,
+    build_a2ui_system_prompt,
+)
 from app.app_utils.firestore_tools import (
     add_or_update_food_allergen,
     search_food_allergens_database,
@@ -31,9 +35,13 @@ from app.app_utils.firestore_tools import (
 from app.app_utils.network_tools import lookup_ip_network_info
 from app.app_utils.rag_tools import query_herbal_rag_corpus
 
+PROJECT_ID = "qwiklabs-gcp-03-b4a6a0c3c0f2"
+LOCATION = "us-east1"
+REASONING_ENGINE_ID = "6293826658738634752"
+
 AGENT_ENGINE_RESOURCE_NAME = os.getenv(
     "AGENT_ENGINE_RESOURCE_NAME",
-    "projects/70111987022/locations/us-east1/reasoningEngines/6293826658738634752",
+    f"projects/{PROJECT_ID}/locations/{LOCATION}/reasoningEngines/{REASONING_ENGINE_ID}",
 )
 
 code_executor = AgentEngineSandboxCodeExecutor(
@@ -79,6 +87,18 @@ async def generate_memories_callback(callback_context: CallbackContext):
     await callback_context.add_session_to_memory()
 
 
+role_description = (
+    "You are an AI assistant for LinuxOps, a modern Linux infrastructure and SRE management platform. "
+    "You provide accurate food safety information, Linux network diagnostic assistance, and herbal grounding. "
+    "You can safely execute Python code in a sandboxed environment via AgentEngineSandboxCodeExecutor to perform calculations and data processing. "
+    "You remember user allergies and server preferences via Vertex AI Memory Bank. "
+    "You have tools to access Cloud Firestore (`search_food_allergens_database`, `add_or_update_food_allergen`), "
+    "perform real-time public IP / domain network diagnostics (`lookup_ip_network_info`), "
+    "and retrieve grounded knowledge from Nicholas Culpeper's The Complete Herbal (`query_herbal_rag_corpus`)."
+)
+
+a2ui_instruction = build_a2ui_system_prompt(role_description, version="0.8")
+
 root_agent = Agent(
     name="root_agent",
     model=Gemini(
@@ -86,15 +106,7 @@ root_agent = Agent(
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     code_executor=code_executor,
-    instruction=(
-        "You are an AI assistant for LinuxOps, a modern Linux infrastructure and SRE management platform. "
-        "You provide accurate food safety information, Linux network diagnostic assistance, and herbal grounding. "
-        "You can safely execute Python code in a sandboxed environment via AgentEngineSandboxCodeExecutor to perform calculations and data processing. "
-        "You remember user allergies and server preferences via Vertex AI Memory Bank. "
-        "You have tools to access Cloud Firestore (`search_food_allergens_database`, `add_or_update_food_allergen`), "
-        "perform real-time public IP / domain network diagnostics (`lookup_ip_network_info`), "
-        "and retrieve grounded knowledge from Nicholas Culpeper's The Complete Herbal (`query_herbal_rag_corpus`)."
-    ),
+    instruction=a2ui_instruction,
     tools=[
         get_weather,
         get_current_time,
@@ -104,6 +116,7 @@ root_agent = Agent(
         query_herbal_rag_corpus,
         PreloadMemoryTool(),
     ],
+    after_model_callback=a2ui_after_model_callback,
     after_agent_callback=generate_memories_callback,
 )
 
