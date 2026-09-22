@@ -47,14 +47,20 @@ async def generate_domain_item_video(
 
     video_bytes = None
     try:
-        operation = client.models.generate_videos(
+        interaction = client.interactions.create(
             model="gemini-omni-flash-preview",
-            source=types.GenerateVideosSource(prompt=item_description),
+            input=item_description,
+            generation_config={"response_modalities": ["VIDEO"]},
         )
-        if hasattr(operation, "result") and callable(operation.result):
-            response = operation.result()
-            if hasattr(response, "generated_videos") and response.generated_videos:
-                video_bytes = response.generated_videos[0].video.video_bytes
+        if hasattr(interaction, "outputs") and interaction.outputs:
+            for out in interaction.outputs:
+                if hasattr(out, "contents") and out.contents:
+                    for c in out.contents:
+                        if hasattr(c, "data") and c.data:
+                            video_bytes = c.data
+                            break
+                if video_bytes:
+                    break
     except Exception as e:
         logger.warning("Error generating video via gemini-omni-flash-preview: %s", e)
 
