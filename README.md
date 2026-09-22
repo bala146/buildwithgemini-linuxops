@@ -1,28 +1,50 @@
 # LinuxOps AI
 
-> **AI-powered Linux Infrastructure Operations**
+> **AI-Powered Linux Infrastructure Operations & SRE Platform**
 
-LinuxOps AI is an enterprise-grade SRE and InfraOps advisory platform designed to help Linux engineers rapidly **Detect → Understand → Investigate → Recommend → Communicate** system anomalies across fleet servers.
+LinuxOps AI is an enterprise-grade SRE and InfraOps platform powered by Google Gemini, Vertex AI Agent Engine, Cloud Run, Cloud Firestore, and Vertex AI RAG. It helps Linux engineers rapidly **Detect → Understand → Investigate → Recommend → Communicate** system anomalies across fleet servers.
+
+Live Production URL: [https://linuxops-frontend-70111987022.us-east1.run.app](https://linuxops-frontend-70111987022.us-east1.run.app)
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## 🌟 Architecture & Key Features
 
-- **Frontend**: React 18, Vite, TypeScript
-- **Styling**: Tailwind CSS (Enterprise dark navy theme `#08111F`)
+### 🤖 1. ADK Agent & Vertex AI Reasoning Engine
+- Deployed on **Vertex AI Reasoning Engine** (`projects/70111987022/locations/us-east1/reasoningEngines/6293826658738634752`).
+- Integrated with **Vertex AI Memory Bank** for persistent cross-session memories (`PreloadMemoryTool` & `generate_memories_callback`).
+
+### 🐍 2. Sandboxed Code Execution
+- Uses `AgentEngineSandboxCodeExecutor` to safely execute Python code in a secure Agent Engine sandbox for data processing and math tasks.
+
+### 🎨 3. Declarative A2UI Integration
+- Built with **A2UI** (version `0.8`) using `A2uiSchemaManager` and `BasicCatalog`.
+- Processed via `a2ui_after_model_callback` in `a2ui_utils.py` to deliver rich declarative UI cards and forms.
+
+### 🗄️ 4. Cloud Firestore Backend
+- Connected to Cloud Firestore (`qwiklabs-gcp-03-b4a6a0c3c0f2`).
+- Includes function tools `search_food_allergens_database` and `add_or_update_food_allergen` for structured data management.
+
+### 🌐 5. Public Network Diagnostics Tool
+- `lookup_ip_network_info` function tool for real-time IP / domain geolocation and network diagnostics.
+
+### 📚 6. Vertex AI RAG Engine Grounding
+- Serverless Vertex AI RAG corpus grounded on Nicholas Culpeper's *The Complete Herbal* (`pg49513.txt`) with `query_herbal_rag_corpus` retrieval tool.
+
+### 🪣 7. GCP Cloud Storage & Cloud Run Deployment
+- **Cloud Storage Bucket**: `gs://linuxops-qwiklabs-gcp-03-b4a6a0c3c0f2` with public viewer permissions.
+- **Cloud Run Deployment**: Frontend hosted on GCP Cloud Run with IAM role `roles/aiplatform.user` granted to the compute service account.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS
 - **Icons**: Lucide React
 - **Routing**: React Router DOM
-- **AI SDK**: `@google/genai` (Google Gemini API - Model `gemini-2.5-flash`)
-- **State Management**: React Context (`DemoContext`) with resilient fallback engine
-
----
-
-## 🔒 Advisory Safety Guarantee
-
-LinuxOps AI operates strictly as an **advisory tool**:
-- It **never** executes commands or connects to live SSH servers.
-- All suggested Linux commands are risk-classified (`Read Only`, `Privileged`, `Potentially Disruptive`).
-- Observed evidence is explicitly separated from possible causes (hypotheses).
+- **Agent Framework**: Google ADK (Agent Development Kit), Python 3.13
+- **AI SDK & Model**: `@google/genai`, Google Gemini (`gemini-flash-latest` / `gemini-2.5-flash`)
+- **Cloud Infrastructure**: GCP Cloud Run, Vertex AI Reasoning Engine, Cloud Firestore, Cloud Storage, Vertex AI RAG
 
 ---
 
@@ -34,7 +56,7 @@ LinuxOps AI operates strictly as an **advisory tool**:
 
 ### 2. Installation
 
-Clone or extract the project repository and run:
+Clone the repository and install dependencies:
 
 ```bash
 npm install
@@ -42,19 +64,18 @@ npm install
 
 ### 3. Environment Configuration
 
-Copy the sample environment file `.env.example` to `.env`:
+Copy `.env.example` to `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and set your Google Gemini API key:
+Configure environment variables:
 
 ```env
-VITE_GEMINI_API_KEY=your_actual_gemini_api_key_here
+VITE_AGENT_ENGINE_RESOURCE_NAME=projects/70111987022/locations/us-east1/reasoningEngines/6293826658738634752
+VITE_AGENT_DIRECTORY=app
 ```
-
-> **Note**: If `VITE_GEMINI_API_KEY` is left blank, invalid, or quota-exceeded, LinuxOps AI automatically falls back to its built-in **Demo Fallback Engine** so workshop presentations are 100% reliable and fail-safe.
 
 ### 4. Start Development Server
 
@@ -66,65 +87,30 @@ Open your browser to `http://localhost:8080`.
 
 ---
 
-## 🧪 Testing Fallback Mode
+## 🎬 Workshop Demo Walkthrough
 
-To test the **Demo Fallback Engine**:
-1. Leave `VITE_GEMINI_API_KEY=` empty in `.env` (or set it to `your_api_key_here`).
-2. Click **✨ Analyze with Gemini** on `api-prod-07`.
-3. Notice the **Demo Fallback Result** badge appears on the analysis panel with realistic structured investigation steps, evidence, and commands.
-
----
-
-## 🎬 Workshop Demo Walkthrough (90-Minute Presenter Playbook)
-
-Follow this 6-step interactive workflow during live demonstrations:
-
-1. **Fleet Dashboard**:
-   - Show fleet KPIs (128 total servers: 112 Healthy, 11 Warning, 5 Critical).
-   - Point out the critical demo focus host: `api-prod-07`.
-
-2. **Inspect Telemetry**:
-   - Click **View Server** on `api-prod-07`.
-   - Review CPU (94%), Memory (91%), Load Avg (12.4), and failed `pacemaker` service.
-
-3. **Analyze with Gemini**:
-   - Click **✨ Analyze with Gemini**.
-   - Show loading step animation and the structured analysis output.
-
-4. **Review Investigation Commands**:
-   - Explain observed facts vs possible causes.
-   - Click **Copy Command** on `ps -eo ...` to demonstrate the clipboard toast notification (`Command copied`).
-
-5. **Generate Incident Draft**:
-   - View the generated **INC-2026-0922-001** draft.
-   - Click **Copy Incident** (`Incident copied`).
-
-6. **Notification Preview**:
-   - Click **Copy for Teams** or **Copy for Slack** to prepare formatted alert dispatches.
+1. **Fleet Dashboard**: Review system health metrics and server statuses across production and staging hosts.
+2. **Inspect Telemetry**: Select focus server `api-prod-07` to analyze CPU, Memory, and log traces.
+3. **AI Copilot & Diagnostics**: Trigger Gemini AI analysis, run sandboxed Python code, query RAG herbal knowledge, or perform live IP lookups.
+4. **Structured Incident Response**: Review observed facts vs hypotheses and export formatted incident reports for Slack / Teams.
 
 ---
 
-## 📦 Production Build
+## 📦 Production Deployment
 
-To compile and validate the TypeScript bundle:
-
+### Build Frontend
 ```bash
 npm run build
 ```
 
-To preview the production build locally:
-
+### Deploy to GCP Cloud Run
 ```bash
-npm run preview
+gcloud run deploy linuxops-frontend \
+  --source . \
+  --region us-east1 \
+  --allow-unauthenticated
 ```
 
 ---
 
-## ❓ Troubleshooting
-
-- **Gemini API Error / Quota Exceeded**: The application will automatically catch the error, log a warning, and present the structured fallback analysis labeled with `Demo Fallback Result`.
-- **Port Conflict**: If port 8080 is in use, Vite will automatically prompt or select the next available port.
-
----
-
-*LinuxOps AI • Workshop Prototype • Powered by Gemini*
+*LinuxOps AI • Enterprise SRE Platform • Powered by Google Gemini & Vertex AI*
