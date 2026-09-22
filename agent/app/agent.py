@@ -34,6 +34,7 @@ from app.app_utils.firestore_tools import (
 )
 from app.app_utils.network_tools import lookup_ip_network_info
 from app.app_utils.rag_tools import query_herbal_rag_corpus
+from app.app_utils.video_tools import generate_domain_item_video
 
 PROJECT_ID = "qwiklabs-gcp-03-b4a6a0c3c0f2"
 LOCATION = "us-east1"
@@ -94,7 +95,8 @@ role_description = (
     "You remember user allergies and server preferences via Vertex AI Memory Bank. "
     "You have tools to access Cloud Firestore (`search_food_allergens_database`, `add_or_update_food_allergen`), "
     "perform real-time public IP / domain network diagnostics (`lookup_ip_network_info`), "
-    "and retrieve grounded knowledge from Nicholas Culpeper's The Complete Herbal (`query_herbal_rag_corpus`)."
+    "retrieve grounded knowledge from Nicholas Culpeper's The Complete Herbal (`query_herbal_rag_corpus`), "
+    "and generate domain item videos (`generate_domain_item_video`)."
 )
 
 a2ui_instruction = build_a2ui_system_prompt(role_description, version="0.8")
@@ -114,6 +116,7 @@ root_agent = Agent(
         add_or_update_food_allergen,
         lookup_ip_network_info,
         query_herbal_rag_corpus,
+        generate_domain_item_video,
         PreloadMemoryTool(),
     ],
     after_model_callback=a2ui_after_model_callback,
