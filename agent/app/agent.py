@@ -19,6 +19,7 @@ from zoneinfo import ZoneInfo
 from google.adk.agents import Agent
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.apps import App
+from google.adk.code_executors import AgentEngineSandboxCodeExecutor
 from google.adk.models import Gemini
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 from google.genai import types
@@ -29,6 +30,15 @@ from app.app_utils.firestore_tools import (
 )
 from app.app_utils.network_tools import lookup_ip_network_info
 from app.app_utils.rag_tools import query_herbal_rag_corpus
+
+AGENT_ENGINE_RESOURCE_NAME = os.getenv(
+    "AGENT_ENGINE_RESOURCE_NAME",
+    "projects/70111987022/locations/us-east1/reasoningEngines/6293826658738634752",
+)
+
+code_executor = AgentEngineSandboxCodeExecutor(
+    agent_engine_resource_name=AGENT_ENGINE_RESOURCE_NAME
+)
 
 
 def get_weather(query: str) -> str:
@@ -75,9 +85,11 @@ root_agent = Agent(
         model=os.getenv("MODEL_NAME", "gemini-flash-latest"),
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
+    code_executor=code_executor,
     instruction=(
         "You are an AI assistant for LinuxOps, a modern Linux infrastructure and SRE management platform. "
         "You provide accurate food safety information, Linux network diagnostic assistance, and herbal grounding. "
+        "You can safely execute Python code in a sandboxed environment via AgentEngineSandboxCodeExecutor to perform calculations and data processing. "
         "You remember user allergies and server preferences via Vertex AI Memory Bank. "
         "You have tools to access Cloud Firestore (`search_food_allergens_database`, `add_or_update_food_allergen`), "
         "perform real-time public IP / domain network diagnostics (`lookup_ip_network_info`), "
