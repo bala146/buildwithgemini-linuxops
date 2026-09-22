@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #08111F;
+    --bg-sidebar: #0B1628;
+    --bg-card: #111C2F;
+    --bg-card-elevated: #152238;
+    --color-cyan: #22D3EE;
+    --color-blue: #3B82F6;
+    --color-green: #22C55E;
+    --color-amber: #F59E0B;
+    --color-red: #EF4444;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+  }
+
+  body {
+    background-color: #08111F;
+    color: #F8FAFC;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B1628;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Pulse animation for critical / active states */
+@keyframes pulseGlowRed {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
+  }
+}
+
+@keyframes pulseGlowCyan {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(34, 211, 238, 0.5);
+  }
+}
+
+.glow-red {
+  animation: pulseGlowRed 2s infinite ease-in-out;
+}
+
+.glow-cyan {
+  animation: pulseGlowCyan 2.5s infinite ease-in-out;
+}
+
+.glass-card {
+  background: rgba(17, 28, 47, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}

@@ -1,0 +1,101 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import datetime
+import os
+from zoneinfo import ZoneInfo
+
+from google.adk.agents import Agent
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.apps import App
+from google.adk.models import Gemini
+from google.adk.tools.preload_memory_tool import PreloadMemoryTool
+from google.genai import types
+
+from app.app_utils.firestore_tools import (
+    add_or_update_food_allergen,
+    search_food_allergens_database,
+)
+from app.app_utils.network_tools import lookup_ip_network_info
+from app.app_utils.rag_tools import query_herbal_rag_corpus
+
+
+def get_weather(query: str) -> str:
+    """Simulates a web search. Use it to get information on weather.
+
+    Args:
+        query: A string containing the location to get weather information for.
+
+    Returns:
+        A string with the simulated weather information for the queried location.
+    """
+    if "sf" in query.lower() or "san francisco" in query.lower():
+        return "It's 60 degrees and foggy."
+    return "It's 90 degrees and sunny."
+
+
+def get_current_time(query: str) -> str:
+    """Simulates getting the current time for a city.
+
+    Args:
+        query: The name of the city to get the current time for.
+
+    Returns:
+        A string with the current time information.
+    """
+    if "sf" in query.lower() or "san francisco" in query.lower():
+        tz_identifier = "America/Los_Angeles"
+    else:
+        return f"Sorry, I don't have timezone information for query: {query}."
+
+    tz = ZoneInfo(tz_identifier)
+    now = datetime.datetime.now(tz)
+    return f"The current time for query {query} is {now.strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
+
+
+async def generate_memories_callback(callback_context: CallbackContext):
+    """Sends the session's events to Memory Bank for cross-session memory generation."""
+    await callback_context.add_session_to_memory()
+
+
+root_agent = Agent(
+    name="root_agent",
+    model=Gemini(
+        model=os.getenv("MODEL_NAME", "gemini-flash-latest"),
+        retry_options=types.HttpRetryOptions(attempts=3),
+    ),
+    instruction=(
+        "You are an AI assistant for LinuxOps, a modern Linux infrastructure and SRE management platform. "
+        "You provide accurate food safety information, Linux network diagnostic assistance, and herbal grounding. "
+        "You remember user allergies and server preferences via Vertex AI Memory Bank. "
+        "You have tools to access Cloud Firestore (`search_food_allergens_database`, `add_or_update_food_allergen`), "
+        "perform real-time public IP / domain network diagnostics (`lookup_ip_network_info`), "
+        "and retrieve grounded knowledge from Nicholas Culpeper's The Complete Herbal (`query_herbal_rag_corpus`)."
+    ),
+    tools=[
+        get_weather,
+        get_current_time,
+        search_food_allergens_database,
+        add_or_update_food_allergen,
+        lookup_ip_network_info,
+        query_herbal_rag_corpus,
+        PreloadMemoryTool(),
+    ],
+    after_agent_callback=generate_memories_callback,
+)
+
+app = App(
+    root_agent=root_agent,
+    name="app",
+)
