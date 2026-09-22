@@ -1,116 +1,111 @@
-# LinuxOps AI
+# LinuxOps AI Agent
 
-> **AI-Powered Linux Infrastructure Operations & SRE Platform**
+> **Enterprise SRE & Infrastructure Advisory Platform Powered by Google ADK & Vertex AI**
 
-LinuxOps AI is an enterprise-grade SRE and InfraOps platform powered by Google Gemini, Vertex AI Agent Engine, Cloud Run, Cloud Firestore, and Vertex AI RAG. It helps Linux engineers rapidly **Detect → Understand → Investigate → Recommend → Communicate** system anomalies across fleet servers.
+![LinuxOps Agent Demo](./agent_demo.gif)
 
-Live Production URL: [https://linuxops-frontend-70111987022.us-east1.run.app](https://linuxops-frontend-70111987022.us-east1.run.app)
-
----
-
-## 🌟 Architecture & Key Features
-
-### 🤖 1. ADK Agent & Vertex AI Reasoning Engine
-- Deployed on **Vertex AI Reasoning Engine** (`projects/70111987022/locations/us-east1/reasoningEngines/6293826658738634752`).
-- Integrated with **Vertex AI Memory Bank** for persistent cross-session memories (`PreloadMemoryTool` & `generate_memories_callback`).
-
-### 🐍 2. Sandboxed Code Execution
-- Uses `AgentEngineSandboxCodeExecutor` to safely execute Python code in a secure Agent Engine sandbox for data processing and math tasks.
-
-### 🎨 3. Declarative A2UI Integration
-- Built with **A2UI** (version `0.8`) using `A2uiSchemaManager` and `BasicCatalog`.
-- Processed via `a2ui_after_model_callback` in `a2ui_utils.py` to deliver rich declarative UI cards and forms.
-
-### 🗄️ 4. Cloud Firestore Backend
-- Connected to Cloud Firestore (`qwiklabs-gcp-03-b4a6a0c3c0f2`).
-- Includes function tools `search_food_allergens_database` and `add_or_update_food_allergen` for structured data management.
-
-### 🌐 5. Public Network Diagnostics Tool
-- `lookup_ip_network_info` function tool for real-time IP / domain geolocation and network diagnostics.
-
-### 📚 6. Vertex AI RAG Engine Grounding
-- Serverless Vertex AI RAG corpus grounded on Nicholas Culpeper's *The Complete Herbal* (`pg49513.txt`) with `query_herbal_rag_corpus` retrieval tool.
-
-### 🪣 7. GCP Cloud Storage & Cloud Run Deployment
-- **Cloud Storage Bucket**: `gs://linuxops-qwiklabs-gcp-03-b4a6a0c3c0f2` with public viewer permissions.
-- **Cloud Run Deployment**: Frontend hosted on GCP Cloud Run with IAM role `roles/aiplatform.user` granted to the compute service account.
+LinuxOps AI is an interactive Site Reliability Engineering (SRE) and Linux server operations platform built with the **Google Agent Development Kit (ADK)** and **Vertex AI Agent Engine**.
 
 ---
 
-## 🛠️ Tech Stack
+## 🌟 Implemented Capabilities & Google Cloud Services
 
-- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS
-- **Icons**: Lucide React
-- **Routing**: React Router DOM
-- **Agent Framework**: Google ADK (Agent Development Kit), Python 3.13
-- **AI SDK & Model**: `@google/genai`, Google Gemini (`gemini-flash-latest` / `gemini-2.5-flash`)
-- **Cloud Infrastructure**: GCP Cloud Run, Vertex AI Reasoning Engine, Cloud Firestore, Cloud Storage, Vertex AI RAG
+The agent implementation in `app/agent.py` and `app/app_utils/` configures and connects the following tools and services:
+
+### 🧠 1. Vertex AI Memory Bank
+- **Implementation**: Uses `PreloadMemoryTool()` and `generate_memories_callback` (`add_session_to_memory()`).
+- **Capability**: Preserves user preferences, previous incident details, and server history across multiple chat sessions.
+
+### 🗄️ 2. Cloud Firestore Database Integration
+- **Implementation**: `search_food_allergens_database` and `add_or_update_food_allergen` in `app/app_utils/firestore_tools.py`.
+- **Capability**: Queries and updates structured records in the GCP Cloud Firestore database (`food_allergens` collection).
+
+### 🪣 3. GCP Cloud Storage & Artifact Management
+- **Implementation**: `generate_domain_item_video` in `app/app_utils/video_tools.py`.
+- **Capability**: Streams generated media to Google Cloud Storage public buckets and registers artifacts in the ADK Playground via `tool_context.save_artifact`.
+
+### 📚 4. Vertex AI RAG Engine Grounding
+- **Implementation**: `query_herbal_rag_corpus` in `app/app_utils/rag_tools.py`.
+- **Capability**: Queries a serverless Vertex AI RAG corpus grounded on Nicholas Culpeper's *The Complete Herbal*.
+
+### 🐍 5. Agent Engine Sandbox Code Executor
+- **Implementation**: `AgentEngineSandboxCodeExecutor` in `app/agent.py`.
+- **Capability**: Safely executes Python code inside an isolated Vertex AI Agent Engine cloud sandbox for calculations and data processing.
+
+### 🎨 6. A2UI Declarative UI Component Manager
+- **Implementation**: `A2uiSchemaManager` (version 0.8) and `BasicCatalog` in `app/app_utils/a2ui_utils.py`.
+- **Capability**: Formats LLM responses into structured `<a2ui-json>` declarative UI cards processed via `a2ui_after_model_callback`.
+
+### 🌐 7. Public Network Diagnostics API Tool
+- **Implementation**: `lookup_ip_network_info` in `app/app_utils/network_tools.py`.
+- **Capability**: Fetches real-time public IP and domain geolocation and AS network metadata.
+
+### 🎥 8. Google Omni Video Generator
+- **Implementation**: Uses Google's Omni model (`gemini-omni-flash-preview`) in the `global` region via `client.interactions.create`.
+- **Capability**: Generates domain visualization videos and returns public storage URLs.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🛠️ Project Structure
+
+```text
+LinuxOps/
+├── README.md                 # Project documentation & capabilities
+├── project_brief.md          # Project brief & domain overview
+├── agent_demo.gif            # Inline looping demo recording
+├── agent/                    # Python ADK Agent service
+│   ├── agents-cli-manifest.yaml # Agent deployment manifest
+│   ├── pyproject.toml        # Dependencies & virtual environment config
+│   └── app/
+│       ├── agent.py          # Root ADK Agent configuration & tool wiring
+│       └── app_utils/
+│           ├── a2ui_utils.py       # A2UI schema manager & after_model_callback
+│           ├── firestore_tools.py  # Firestore database tools
+│           ├── memory_config.py    # Memory Bank helpers
+│           ├── network_tools.py    # Network diagnostic tools
+│           ├── rag_tools.py        # Vertex AI RAG corpus search
+│           └── video_tools.py      # Google Omni video generator
+└── src/                      # Vite + React 18 Frontend
+    ├── App.tsx               # App layout & routing
+    └── pages/                # Workspace, Dashboard, & Copilot pages
+```
+
+---
+
+## 🚀 Local Setup & Development Instructions
 
 ### 1. Prerequisites
 - Node.js `v18.0.0` or higher
-- `npm` or `yarn`
+- Python `3.13` or `3.14` with `uv` package manager
+- Google Cloud SDK (`gcloud`) with active GCP authentication
 
-### 2. Installation
-
-Clone the repository and install dependencies:
+### 2. Install Frontend Dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Environment Configuration
-
-Copy `.env.example` to `.env`:
+### 3. Install Agent Dependencies
 
 ```bash
-cp .env.example .env
+cd agent
+uv sync
 ```
 
-Configure environment variables:
+### 4. Start Local Development Server
 
-```env
-VITE_AGENT_ENGINE_RESOURCE_NAME=projects/70111987022/locations/us-east1/reasoningEngines/6293826658738634752
-VITE_AGENT_DIRECTORY=app
-```
-
-### 4. Start Development Server
+Run the Vite development server locally:
 
 ```bash
 npm run dev
 ```
 
-Open your browser to `http://localhost:8080`.
+To run the ADK Agent locally:
 
----
-
-## 🎬 Workshop Demo Walkthrough
-
-1. **Fleet Dashboard**: Review system health metrics and server statuses across production and staging hosts.
-2. **Inspect Telemetry**: Select focus server `api-prod-07` to analyze CPU, Memory, and log traces.
-3. **AI Copilot & Diagnostics**: Trigger Gemini AI analysis, run sandboxed Python code, query RAG herbal knowledge, or perform live IP lookups.
-4. **Structured Incident Response**: Review observed facts vs hypotheses and export formatted incident reports for Slack / Teams.
-
----
-
-## 📦 Production Deployment
-
-### Build Frontend
 ```bash
-npm run build
-```
-
-### Deploy to GCP Cloud Run
-```bash
-gcloud run deploy linuxops-frontend \
-  --source . \
-  --region us-east1 \
-  --allow-unauthenticated
+uv run python -m app.agent
 ```
 
 ---
 
-*LinuxOps AI • Enterprise SRE Platform • Powered by Google Gemini & Vertex AI*
+*LinuxOps AI • Enterprise SRE Advisory Platform • Powered by Google ADK & Vertex AI*
